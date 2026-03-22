@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sun Spot Pool Services</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #0f172a; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    input:focus, select:focus, textarea:focus { border-color: #0ea5e9 !important; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); outline: none; }
+    button:hover { opacity: 0.88; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const initialClients = [
+  { id: 1, name: "Marcus & Linda Chen", address: "4821 Lakeview Dr", phone: "330-555-0182", email: "mchen@email.com", poolType: "Inground", size: "20x40", frequency: "Weekly", status: "Active", notes: "Gate code: 4821" },
+  { id: 2, name: "Robert Davenport", address: "1130 Elmwood Ct", phone: "330-555-0341", email: "rdavenport@email.com", poolType: "Inground", size: "16x32", frequency: "Bi-weekly", status: "Active", notes: "Dog in yard - call ahead" },
+  { id: 3, name: "Sandra Kowalski", address: "7702 Birchwood Ave", phone: "330-555-0994", email: "skowalski@email.com", poolType: "Above Ground", size: "15x30", frequency: "Weekly", status: "Active", notes: "" },
+  { id: 4, name: "The Harmon Family", address: "389 Crestwood Ln", phone: "330-555-0457", email: "harmonpool@email.com", poolType: "Inground", size: "18x36", frequency: "Weekly", status: "Active", notes: "Prefer morning visits" },
+  { id: 5, name: "Greg & Tina Vasquez", address: "2245 Sunridge Blvd", phone: "330-555-0778", email: "gvasquez@email.com", poolType: "Inground", size: "20x40", frequency: "Weekly", status: "Inactive", notes: "Seasonal - May to Sept" },
+];
+
+const initialJobs = [
+  { id: 1, clientId: 1, clientName: "Marcus & Linda Chen", address: "4821 Lakeview Dr", type: "Weekly Clean", time: "08:00", status: "Complete", date: "2026-03-21", notes: "Skimmed, vacuumed, checked chemicals" },
+  { id: 2, clientId: 3, clientName: "Sandra Kowalski", address: "7702 Birchwood Ave", type: "Weekly Clean", time: "09:30", status: "In Progress", date: "2026-03-21", notes: "" },
+  { id: 3, clientId: 4, clientName: "The Harmon Family", address: "389 Crestwood Ln", type: "Weekly Clean", time: "11:00", status: "Scheduled", date: "2026-03-21", notes: "" },
+  { id: 4, clientId: 2, clientName: "Robert Davenport", address: "1130 Elmwood Ct", type: "Bi-weekly Clean", time: "13:00", status: "Scheduled", date: "2026-03-21", notes: "Call ahead for dog" },
+  { id: 5, clientId: 1, clientName: "Marcus & Linda Chen", address: "4821 Lakeview Dr", type: "Chemical Balance", time: "08:30", status: "Scheduled", date: "2026-03-23", notes: "" },
+  { id: 6, clientId: 5, clientName: "Greg & Tina Vasquez", address: "2245 Sunridge Blvd", type: "Opening Service", time: "10:00", status: "Scheduled", date: "2026-03-24", notes: "Season opener" },
+];
+
+const initialSupplies = [
+  { id: 1, name: "Chlorine Tablets (50 lb)", category: "Chemicals", stock: 2, unit: "bucket", reorderAt: 1, cost: 89.99 },
+  { id: 2, name: "pH Down (Dry Acid)", category: "Chemicals", stock: 5, unit: "bag", reorderAt: 2, cost: 18.50 },
+  { id: 3, name: "pH Up (Soda Ash)", category: "Chemicals", stock: 3, unit: "bag", reorderAt: 2, cost: 14.75 },
+  { id: 4, name: "Algaecide", category: "Chemicals", stock: 8, unit: "qt", reorderAt: 3, cost: 12.99 },
+  { id: 5, name: "Pool Shock", category: "Chemicals", stock: 1, unit: "case", reorderAt: 2, cost: 42.00 },
+  { id: 6, name: "Skimmer Nets", category: "Equipment", stock: 4, unit: "each", reorderAt: 2, cost: 9.99 },
+  { id: 7, name: "Vacuum Heads", category: "Equipment", stock: 2, unit: "each", reorderAt: 1, cost: 34.99 },
+  { id: 8, name: "Test Strips (100-pk)", category: "Testing", stock: 6, unit: "pack", reorderAt: 2, cost: 11.49 },
+];
+
+const initialInvoices = [
+  { id: "INV-1024", clientId: 1, clientName: "Marcus & Linda Chen", date: "2026-03-15", due: "2026-03-29", amount: 320.00, status: "Paid", items: [{ desc: "4x Weekly Clean", qty: 4, rate: 75 }, { desc: "Chemical Treatment", qty: 1, rate: 20 }] },
+  { id: "INV-1025", clientId: 4, clientName: "The Harmon Family", date: "2026-03-15", due: "2026-03-29", amount: 300.00, status: "Pending", items: [{ desc: "4x Weekly Clean", qty: 4, rate: 75 }] },
+  { id: "INV-1026", clientId: 3, clientName: "Sandra Kowalski", date: "2026-03-15", due: "2026-03-29", amount: 240.00, status: "Overdue", items: [{ desc: "4x Weekly Clean", qty: 4, rate: 60 }] },
+  { id: "INV-1027", clientId: 2, clientName: "Robert Davenport", date: "2026-03-15", due: "2026-03-29", amount: 160.00, status: "Pending", items: [{ desc: "2x Bi-weekly Clean", qty: 2, rate: 80 }] },
+];
+
+const STATUS_COLOR = { Complete: "#22c55e", "In Progress": "#f59e0b", Scheduled: "#3b82f6", Cancelled: "#ef4444" };
+const INV_COLOR = { Paid: "#22c55e", Pending: "#f59e0b", Overdue: "#ef4444", Draft: "#94a3b8" };
+
+function Badge({ label, color }) {
+  return (
+    <span style={{ background: color + "20", color: color, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 6, whiteSpace: "nowrap" }}>
+      {label}
+    </span>
+  );
+}
+
+function Modal({ children, onClose }) {
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200 }}>
+      <div onClick={function(e){ e.stopPropagation(); }} style={{ background: "#fff", borderRadius: 16, padding: 28, width: 480, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 25px 60px rgba(0,0,0,0.2)" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  var [tab, setTab] = useState("dashboard");
+  var [clients, setClients] = useState(initialClients);
+  var [jobs, setJobs] = useState(initialJobs);
+  var [supplies, setSupplies] = useState(initialSupplies);
+  var [invoices, setInvoices] = useState(initialInvoices);
+  var [clientModal, setClientModal] = useState(false);
+  var [jobModal, setJobModal] = useState(false);
+  var [selectedDate, setSelectedDate] = useState("2026-03-21");
+  var [invModal, setInvModal] = useState(null);
+  var [newClient, setNewClient] = useState({ name: "", address: "", phone: "", email: "", poolType: "Inground", size: "", frequency: "Weekly", status: "Active", notes: "" });
+  var [newJob, setNewJob] = useState({ clientId: "", type: "Weekly Clean", time: "09:00", date: "2026-03-21", notes: "" });
+
+  var todayJobs = jobs.filter(function(j){ return j.date === selectedDate; }).sort(function(a,b){ return a.time.localeCompare(b.time); });
+  var lowSupplies = supplies.filter(function(s){ return s.stock <= s.reorderAt; });
+  var pendingInv = invoices.filter(function(i){ return i.status !== "Paid"; });
+  var totalOutstanding = pendingInv.reduce(function(s,i){ return s + i.amount; }, 0);
+
+  function cycleStatus(id) {
+    var order = ["Scheduled", "In Progress", "Complete"];
+    setJobs(jobs.map(function(j){
+      if (j.id !== id) return j;
+      var idx = order.indexOf(j.status);
+      return Object.assign({}, j, { status: order[(idx + 1) % order.length] });
+    }));
+  }
+
+  function saveClient() {
+    if (!newClient.name) return;
+    var id = Math.max.apply(null, [0].concat(clients.map(function(c){ return c.id; }))) + 1;
+    setClients(clients.concat([Object.assign({}, newClient, { id: id })]));
+    setClientModal(false);
+    setNewClient({ name: "", address: "", phone: "", email: "", poolType: "Inground", size: "", frequency: "Weekly", status: "Active", notes: "" });
+  }
+
+  function saveJob() {
+    if (!newJob.clientId) return;
+    var client = clients.find(function(c){ return c.id === parseInt(newJob.clientId); });
+    if (!client) return;
+    var id = Math.max.apply(null, [0].concat(jobs.map(function(j){ return j.id; }))) + 1;
+    setJobs(jobs.concat([Object.assign({}, newJob, { id: id, clientId: parseInt(newJob.clientId), clientName: client.name, address: client.address, status: "Scheduled" })]));
+    setJobModal(false);
+    setNewJob({ clientId: "", type: "Weekly Clean", time: "09:00", date: "2026-03-21", notes: "" });
+  }
+
+  function adjustStock(id, delta) {
+    setSupplies(supplies.map(function(s){
+      if (s.id !== id) return s;
+      return Object.assign({}, s, { stock: Math.max(0, s.stock + delta) });
+    }));
+  }
+
+  function markPaid(invId) {
+    setInvoices(invoices.map(function(i){
+      if (i.id !== invId) return i;
+      return Object.assign({}, i, { status: "Paid" });
+    }));
+    setInvModal(null);
+  }
+
+  var iSt = { width: "100%", padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, background: "#fff", boxSizing: "border-box" };
+  var lSt = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4 };
+  var bBlue = { background: "#0ea5e9", color: "#fff", border: "none", padding: "9px 20px", borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: "pointer" };
+  var bGray = { background: "#f1f5f9", color: "#334155", border: "none", padding: "9px 20px", borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: "pointer" };
+  var bGreen = { background: "#22c55e", color: "#fff", border: "none", padding: "9px 20px", borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: "pointer" };
+  var card = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14 };
+  var thSt = { padding: "12px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" };
+  var tdSt = { padding: "13px 16px", fontSize: 14 };
+
+  var navItems = [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "clients", label: "Clients" },
+    { id: "schedule", label: "Schedule" },
+    { id: "supplies", label: "Supplies" },
+    { id: "invoices", label: "Invoices" },
+  ];
+
+  return (
+    <div style={{ display: "flex", height: "100vh", fontFamily: "system-ui,-apple-system,sans-serif", background: "#f8fafc", color: "#0f172a" }}>
+
+      {/* Sidebar */}
+      <div style={{ width: 220, background: "#fff", borderRight: "1px solid #e2e8f0", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        <div style={{ padding: "22px 18px 18px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 38, height: 38, background: "linear-gradient(135deg,#f59e0b,#f97316)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "#fff", fontWeight: 800 }}>S</div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>Sun Spot</div>
+            <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>Pool Services</div>
+          </div>
+        </div>
+        <nav style={{ padding: "14px 10px", flex: 1 }}>
+          {navItems.map(function(t) {
+            var active = tab === t.id;
+            return (
+              <button key={t.id} onClick={function(){ setTab(t.id); }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "10px 12px", borderRadius: 8, border: "none", cursor: "pointer", marginBottom: 2, background: active ? "#fff7ed" : "transparent", color: active ? "#ea580c" : "#64748b", fontWeight: active ? 700 : 500, fontSize: 14 }}>
+                {t.label}
+                {t.id === "supplies" && lowSupplies.length > 0 && <span style={{ marginLeft: "auto", background: "#fef2f2", color: "#ef4444", fontSize: 11, fontWeight: 700, padding: "1px 7px", borderRadius: 10 }}>{lowSupplies.length}</span>}
+                {t.id === "invoices" && pendingInv.length > 0 && <span style={{ marginLeft: "auto", background: "#fffbeb", color: "#d97706", fontSize: 11, fontWeight: 700, padding: "1px 7px", borderRadius: 10 }}>{pendingInv.length}</span>}
+              </button>
+            );
+          })}
+        </nav>
+        <div style={{ padding: "0 10px 20px" }}>
+          <div style={{ background: "#fff7ed", borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#ea580c", marginBottom: 3 }}>TODAY</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#334155" }}>{new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</div>
+            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>{todayJobs.length} jobs scheduled</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div style={{ flex: 1, overflow: "auto" }}>
+
+        {/* DASHBOARD */}
+        {tab === "dashboard" && (
+          <div style={{ padding: 28 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 4px" }}>Dashboard</h1>
+            <p style={{ color: "#64748b", margin: "0 0 24px", fontSize: 14 }}>{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
+              {[
+                { label: "Active Clients", value: clients.filter(function(c){ return c.status === "Active"; }).length, color: "#0ea5e9" },
+                { label: "Jobs Today", value: todayJobs.length, color: "#8b5cf6" },
+                { label: "Outstanding", value: "$" + totalOutstanding.toFixed(0), color: "#f59e0b" },
+                { label: "Low Stock", value: lowSupplies.length, color: "#ef4444" },
+              ].map(function(c) {
+                return (
+                  <div key={c.label} style={Object.assign({}, card, { padding: "18px 20px" })}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>{c.label}</div>
+                    <div style={{ fontSize: 30, fontWeight: 800, color: c.color }}>{c.value}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 18 }}>
+              <div style={Object.assign({}, card, { padding: 20 })}>
+                <h2 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700 }}>Today's Jobs</h2>
+                {todayJobs.length === 0 && <p style={{ color: "#94a3b8", fontSize: 14 }}>No jobs scheduled.</p>}
+                {todayJobs.map(function(job) {
+                  return (
+                    <div key={job.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8", width: 42, flexShrink: 0 }}>{job.time}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{job.clientName}</div>
+                        <div style={{ fontSize: 12, color: "#94a3b8" }}>{job.type}</div>
+                      </div>
+                      <button onClick={function(){ cycleStatus(job.id); }} style={{ background: STATUS_COLOR[job.status] + "20", color: STATUS_COLOR[job.status], border: "none", padding: "4px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>{job.status}</button>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                <div style={Object.assign({}, card, { padding: 20 })}>
+                  <h2 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700 }}>Low Stock</h2>
+                  {lowSupplies.length === 0 && <p style={{ color: "#94a3b8", fontSize: 13 }}>All stocked OK</p>}
+                  {lowSupplies.map(function(s) {
+                    return (
+                      <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
+                        <span style={{ fontWeight: 500 }}>{s.name}</span>
+                        <Badge label={s.stock + " left"} color="#ef4444" />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={Object.assign({}, card, { padding: 20 })}>
+                  <h2 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700 }}>Invoices</h2>
+                  {["Paid","Pending","Overdue"].map(function(status) {
+                    var colors = { Paid: "#22c55e", Pending: "#f59e0b", Overdue: "#ef4444" };
+                    var total = invoices.filter(function(i){ return i.status === status; }).reduce(function(acc,i){ return acc + i.amount; }, 0);
+                    return (
+                      <div key={status} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #f1f5f9", fontSize: 14 }}>
+                        <span style={{ color: "#64748b" }}>{status}</span>
+                        <span style={{ fontWeight: 700, color: colors[status] }}>${total.toFixed(0)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CLIENTS */}
+        {tab === "clients" && (
+          <div style={{ padding: 28 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700 }}>Clients ({clients.length})</h1>
+              <button style={bBlue} onClick={function(){ setClientModal(true); }}>+ Add Client</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 14 }}>
+              {clients.map(function(c) {
+                return (
+                  <div key={c.id} style={Object.assign({}, card, { padding: 18 })}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 15 }}>{c.name}</div>
+                        <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>{c.address}</div>
+                      </div>
+                      <Badge label={c.status} color={c.status === "Active" ? "#16a34a" : "#94a3b8"} />
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 13, color: "#64748b" }}>
+                      <div>{c.phone}</div>
+                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.email}</div>
+                      <div>{c.poolType} | {c.size}</div>
+                      <div>{c.frequency}</div>
+                    </div>
+                    {c.notes ? <div style={{ marginTop: 10, fontSize: 12, color: "#94a3b8", background: "#f8fafc", borderRadius: 6, padding: "6px 10px" }}>{c.notes}</div> : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* SCHEDULE */}
+        {tab === "schedule" && (
+          <div style={{ padding: 28 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <h1 style={{ fontSize: 22, fontWeight: 700 }}>Schedule</h1>
+                <input type="date" value={selectedDate} onChange={function(e){ setSelectedDate(e.target.value); }} style={Object.assign({}, iSt, { width: "auto" })} />
+              </div>
+              <button style={bBlue} onClick={function(){ setJobModal(true); }}>+ Add Job</button>
+            </div>
+            <div style={Object.assign({}, card, { overflow: "hidden" })}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    {["Time","Client","Service","Address","Status","Notes"].map(function(h){ return <th key={h} style={thSt}>{h}</th>; })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {jobs.filter(function(j){ return j.date === selectedDate; }).sort(function(a,b){ return a.time.localeCompare(b.time); }).map(function(job, i) {
+                    return (
+                      <tr key={job.id} style={{ borderTop: "1px solid #f1f5f9", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                        <td style={Object.assign({}, tdSt, { fontWeight: 600, color: "#64748b", fontSize: 13 })}>{job.time}</td>
+                        <td style={Object.assign({}, tdSt, { fontWeight: 600 })}>{job.clientName}</td>
+                        <td style={Object.assign({}, tdSt, { color: "#64748b", fontSize: 13 })}>{job.type}</td>
+                        <td style={Object.assign({}, tdSt, { color: "#94a3b8", fontSize: 13 })}>{job.address}</td>
+                        <td style={tdSt}>
+                          <button onClick={function(){ cycleStatus(job.id); }} style={{ background: STATUS_COLOR[job.status] + "20", color: STATUS_COLOR[job.status], border: "none", padding: "4px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{job.status}</button>
+                        </td>
+                        <td style={Object.assign({}, tdSt, { fontSize: 12, color: "#94a3b8" })}>{job.notes}</td>
+                      </tr>
+                    );
+                  })}
+                  {jobs.filter(function(j){ return j.date === selectedDate; }).length === 0 && (
+                    <tr><td colSpan={6} style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>No jobs for this date.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* SUPPLIES */}
+        {tab === "supplies" && (
+          <div style={{ padding: 28 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 22px" }}>Supplies</h1>
+            <div style={Object.assign({}, card, { overflow: "hidden" })}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    {["Item","Category","Stock","Reorder At","Unit Cost","Status"].map(function(h){ return <th key={h} style={thSt}>{h}</th>; })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {supplies.map(function(s, i) {
+                    var low = s.stock <= s.reorderAt;
+                    return (
+                      <tr key={s.id} style={{ borderTop: "1px solid #f1f5f9", background: low ? "#fffbeb" : i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                        <td style={Object.assign({}, tdSt, { fontWeight: 600 })}>{s.name}</td>
+                        <td style={Object.assign({}, tdSt, { color: "#64748b", fontSize: 13 })}>{s.category}</td>
+                        <td style={tdSt}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <button onClick={function(){ adjustStock(s.id, -1); }} style={{ width: 26, height: 26, border: "1px solid #e2e8f0", borderRadius: 6, background: "#f8fafc", cursor: "pointer", fontSize: 16 }}>-</button>
+                            <span style={{ fontWeight: 700, minWidth: 20, textAlign: "center" }}>{s.stock}</span>
+                            <button onClick={function(){ adjustStock(s.id, 1); }} style={{ width: 26, height: 26, border: "1px solid #e2e8f0", borderRadius: 6, background: "#f8fafc", cursor: "pointer", fontSize: 16 }}>+</button>
+                          </div>
+                        </td>
+                        <td style={Object.assign({}, tdSt, { color: "#94a3b8", fontSize: 13 })}>{s.reorderAt} {s.unit}</td>
+                        <td style={Object.assign({}, tdSt, { fontSize: 13 })}>${s.cost.toFixed(2)}</td>
+                        <td style={tdSt}><Badge label={low ? "Reorder" : "OK"} color={low ? "#ef4444" : "#16a34a"} /></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* INVOICES */}
+        {tab === "invoices" && (
+          <div style={{ padding: 28 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 22px" }}>Invoices</h1>
+            <div style={Object.assign({}, card, { overflow: "hidden" })}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    {["Invoice","Client","Date","Due","Amount","Status",""].map(function(h){ return <th key={h} style={thSt}>{h}</th>; })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map(function(inv, i) {
+                    return (
+                      <tr key={inv.id} style={{ borderTop: "1px solid #f1f5f9", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                        <td style={Object.assign({}, tdSt, { fontWeight: 600, color: "#0284c7", fontSize: 13 })}>{inv.id}</td>
+                        <td style={Object.assign({}, tdSt, { fontWeight: 600 })}>{inv.clientName}</td>
+                        <td style={Object.assign({}, tdSt, { color: "#64748b", fontSize: 13 })}>{inv.date}</td>
+                        <td style={Object.assign({}, tdSt, { color: inv.status === "Overdue" ? "#ef4444" : "#64748b", fontSize: 13 })}>{inv.due}</td>
+                        <td style={Object.assign({}, tdSt, { fontWeight: 700 })}>${inv.amount.toFixed(2)}</td>
+                        <td style={tdSt}><Badge label={inv.status} color={INV_COLOR[inv.status]} /></td>
+                        <td style={tdSt}><button onClick={function(){ setInvModal(inv); }} style={Object.assign({}, bGray, { padding: "5px 12px", fontSize: 12 })}>View</button></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ADD CLIENT MODAL */}
+      {clientModal && (
+        <Modal onClose={function(){ setClientModal(false); }}>
+          <h2 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700 }}>Add New Client</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div style={{ gridColumn: "1/-1" }}><label style={lSt}>Full Name</label><input style={iSt} value={newClient.name} onChange={function(e){ setNewClient(Object.assign({}, newClient, { name: e.target.value })); }} placeholder="e.g. The Johnson Family" /></div>
+            <div style={{ gridColumn: "1/-1" }}><label style={lSt}>Address</label><input style={iSt} value={newClient.address} onChange={function(e){ setNewClient(Object.assign({}, newClient, { address: e.target.value })); }} /></div>
+            <div><label style={lSt}>Phone</label><input style={iSt} value={newClient.phone} onChange={function(e){ setNewClient(Object.assign({}, newClient, { phone: e.target.value })); }} /></div>
+            <div><label style={lSt}>Email</label><input style={iSt} value={newClient.email} onChange={function(e){ setNewClient(Object.assign({}, newClient, { email: e.target.value })); }} /></div>
+            <div><label style={lSt}>Pool Type</label>
+              <select style={iSt} value={newClient.poolType} onChange={function(e){ setNewClient(Object.assign({}, newClient, { poolType: e.target.value })); }}>
+                <option>Inground</option><option>Above Ground</option>
+              </select>
+            </div>
+            <div><label style={lSt}>Pool Size</label><input style={iSt} value={newClient.size} onChange={function(e){ setNewClient(Object.assign({}, newClient, { size: e.target.value })); }} placeholder="e.g. 16x32" /></div>
+            <div><label style={lSt}>Frequency</label>
+              <select style={iSt} value={newClient.frequency} onChange={function(e){ setNewClient(Object.assign({}, newClient, { frequency: e.target.value })); }}>
+                <option>Weekly</option><option>Bi-weekly</option><option>Monthly</option>
+              </select>
+            </div>
+            <div><label style={lSt}>Status</label>
+              <select style={iSt} value={newClient.status} onChange={function(e){ setNewClient(Object.assign({}, newClient, { status: e.target.value })); }}>
+                <option>Active</option><option>Inactive</option>
+              </select>
+            </div>
+            <div style={{ gridColumn: "1/-1" }}><label style={lSt}>Notes</label><input style={iSt} value={newClient.notes} onChange={function(e){ setNewClient(Object.assign({}, newClient, { notes: e.target.value })); }} placeholder="Gate code, dog, etc." /></div>
+          </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+            <button style={bGray} onClick={function(){ setClientModal(false); }}>Cancel</button>
+            <button style={bBlue} onClick={saveClient}>Save Client</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ADD JOB MODAL */}
+      {jobModal && (
+        <Modal onClose={function(){ setJobModal(false); }}>
+          <h2 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700 }}>Add New Job</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div><label style={lSt}>Client</label>
+              <select style={iSt} value={newJob.clientId} onChange={function(e){ setNewJob(Object.assign({}, newJob, { clientId: e.target.value })); }}>
+                <option value="">Select client...</option>
+                {clients.filter(function(c){ return c.status === "Active"; }).map(function(c){ return <option key={c.id} value={c.id}>{c.name}</option>; })}
+              </select>
+            </div>
+            <div><label style={lSt}>Service Type</label>
+              <select style={iSt} value={newJob.type} onChange={function(e){ setNewJob(Object.assign({}, newJob, { type: e.target.value })); }}>
+                {["Weekly Clean","Bi-weekly Clean","Chemical Balance","Filter Clean","Opening Service","Closing Service","Repair"].map(function(t){ return <option key={t}>{t}</option>; })}
+              </select>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div><label style={lSt}>Date</label><input type="date" style={iSt} value={newJob.date} onChange={function(e){ setNewJob(Object.assign({}, newJob, { date: e.target.value })); }} /></div>
+              <div><label style={lSt}>Time</label><input type="time" style={iSt} value={newJob.time} onChange={function(e){ setNewJob(Object.assign({}, newJob, { time: e.target.value })); }} /></div>
+            </div>
+            <div><label style={lSt}>Notes</label><input style={iSt} value={newJob.notes} onChange={function(e){ setNewJob(Object.assign({}, newJob, { notes: e.target.value })); }} /></div>
+          </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+            <button style={bGray} onClick={function(){ setJobModal(false); }}>Cancel</button>
+            <button style={bBlue} onClick={saveJob}>Add Job</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* INVOICE DETAIL MODAL */}
+      {invModal && (
+        <Modal onClose={function(){ setInvModal(null); }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{invModal.id}</h2>
+            <Badge label={invModal.status} color={INV_COLOR[invModal.status]} />
+          </div>
+          <div style={{ fontSize: 14, color: "#64748b", marginBottom: 18, lineHeight: 1.9 }}>
+            <strong style={{ color: "#0f172a" }}>{invModal.clientName}</strong><br />
+            Issued: {invModal.date} &nbsp;|&nbsp; Due: {invModal.due}
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 14 }}>
+            <thead>
+              <tr style={{ background: "#f8fafc" }}>
+                {["Description","Qty","Rate","Total"].map(function(h){ return <th key={h} style={Object.assign({}, thSt, { padding: "9px 12px" })}>{h}</th>; })}
+              </tr>
+            </thead>
+            <tbody>
+              {invModal.items.map(function(item, i) {
+                return (
+                  <tr key={i} style={{ borderTop: "1px solid #f1f5f9" }}>
+                    <td style={{ padding: "10px 12px", fontSize: 14 }}>{item.desc}</td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: "#94a3b8" }}>{item.qty}</td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: "#94a3b8" }}>${item.rate}</td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 700 }}>${(item.qty * item.rate).toFixed(2)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div style={{ textAlign: "right", fontWeight: 800, fontSize: 18, borderTop: "2px solid #e2e8f0", paddingTop: 12, marginBottom: 20 }}>
+            Total: ${invModal.amount.toFixed(2)}
+          </div>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            {invModal.status !== "Paid" && <button style={bGreen} onClick={function(){ markPaid(invModal.id); }}>Mark as Paid</button>}
+            <button style={bGray} onClick={function(){ setInvModal(null); }}>Close</button>
+          </div>
+        </Modal>
+      )}
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
